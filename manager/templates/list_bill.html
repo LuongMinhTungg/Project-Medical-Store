@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+        <form method="POST" action="">
+        <fieldset class="form-group">
+                <legend class="border-bottom mb-4">List Bill</legend>
+        </fieldset>
+        <div class="table">
+            <table>
+            <tr class="table-header">
+                {% for header in headers %}
+                    <th class="table-cell">{{ header }}</th>
+                {% endfor %}
+            </tr>
+            {% for row in data %}
+                <div class="table-row"><tr>
+                    <ul>
+                    {% for cell in row %}
+                        <td class="table-cell"> {{cell}} </td>
+                    {% endfor %}
+                    <td><a href="{{ url_for('bills.show_bill_detail', bill_id = row[0]) }}">Detail</a></td>
+                    </ul>
+                </tr>
+            {% endfor %}
+            </div>
+        </table>
+        </div>
+        </form>
+    </div>
+{% endblock content %}
+

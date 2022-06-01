@@ -1,0 +1,37 @@
+{% extends "layout_customer.html" %}
+{% block content %}
+    <div class="content-section">
+        <form method="POST" action="">
+        <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Cart</legend>
+        </fieldset>
+        <div class="table">
+            <table>
+            <tr class="table-header">
+                {% for header in headers %}
+                    <th class="table-cell">{{ header }}</th>
+                {% endfor %}
+            </tr>
+            {% for row in data %}
+                <div class="table-row"><tr>
+                    <ul>
+                    {% for cell in row %}
+                        <td class="table-cell"> {{cell}} </td>
+                    {% endfor %}
+                    <td><a href="{{ url_for('bills.update_cart', medical_id = row[0]) }}">Update</a></td>
+                    <td><a href="{{ url_for('bills.delete_one_cart', medical_id = row[0]) }}">Delete</a></td>
+                    </ul>
+                </tr>
+            {% endfor %}
+            </div>
+        </table>
+        <ul>
+            <a class="btn btn-success float-right" type="button" href="{{ url_for('bills.order_medical') }}">Order</a>
+            <a class="btn btn-success float-right" type="button" href="{{ url_for('bills.clear_cart') }}">Clear</a>
+        </ul>
+
+        </div>
+        </form>
+    </div>
+{% endblock content %}
+

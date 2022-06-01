@@ -1,0 +1,43 @@
+{% extends "layout_customer.html" %}
+{% block content %}
+    <div class="content-section">
+        <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Medical</legend>
+                <div class="form-group">
+                    {{ form.search.label(class="form-control-label") }}
+                    {% if form.search.errors %}
+                        {{ form.search(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.search.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.search(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+        </fieldset>
+        <div class="table"><table>
+            <tr class="table-header">
+                {% for header in headers %}
+                    <th class="table-cell">{{ header }}</th>
+                {% endfor %}
+            </tr>
+            {% for row in data %}
+                <div class="table-row"><tr>
+                    <ul>
+                    {% for cell in row %}
+                        <td class="table-cell"> {{cell}} </td>
+                    {% endfor %}
+                    <td><a href="{{ url_for('bills.check_info', medical_id=row[0] )}}">Add To Cart</a></td>
+                    </ul>
+                </tr>
+
+            {% endfor %}
+            </div>
+        </table></div>
+    </form>
+    </div>
+{% endblock content %}
