@@ -2,7 +2,7 @@
 {% block content %}
     <div class="content-section">
         <form method="POST" action="">
-        <legend class="border-bottom mb-4">Insert Role</legend>
+        <legend class="border-bottom mb-4">Role</legend>
         <button><a class="button" type="button" href="{{ url_for('managers.insert_role') }}">Insert Role</a></button>
         <div class="table"><table>
             <tr class="table-header">
@@ -17,7 +17,7 @@
                         <td class="table-cell"> {{cell}} </td>
                     {% endfor %}
                     <td><a href="{{ url_for('managers.update_role', role_id = row[0]) }}">Update</a></td>
-                    <td><a href="{{ url_for('managers.get_user', username = row[1]) }}">Delete</a></td>
+                    <td><a href="{{ url_for('managers.delete_role', role_id = row[0]) }}">Delete</a></td>
                     </ul>
                 </tr>
 

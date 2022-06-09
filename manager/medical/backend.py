@@ -27,17 +27,28 @@ class BackEndMedical:
         return item
 
     def insert_medical(self):
-        if 'x-access-token' in request.headers:
+        c = request.headers.get('Content-Type')
+        if c == 'application/json':
             data = request.json
         else:
             data = request.form
         if V.vali_insert_medical(data) == True:
-            new_medical = Medical(name=data['name'], type_id=data['type_id'],
-                                  count=data['count'], buy_price=data['buy_price'], sell_price=data['sell_price'],
-                                  exp_date=data['exp_date'], description=data['description'])
-            db.session.add(new_medical)
-            db.session.commit()
-            return 'add', 201
+            type = MedicalType.query.filter_by(name=data['type_name']).first()
+            if not type:
+                return 'not found medical type', 404
+            else:
+                if int(data['count']) >=0 and float(data['buy_price'])>=0 and float(data['sell_price']) >= 0:
+                    new_medical = Medical(name=data['name'], type_id=type.id,
+                                          count=data['count'], buy_price=data['buy_price'], sell_price=data['sell_price'],
+                                          exp_date=data['exp_date'], description=data['description'])
+
+                    db.session.add(new_medical)
+                    db.session.commit()
+                    flash('add')
+                    return 'add', 201
+                flash('not count')
+                return 'not count', 404
+        flash(V.vali_insert_medical(data))
         return V.vali_insert_medical(data)
 
     def delete_medical(self, medical_id):
@@ -46,45 +57,56 @@ class BackEndMedical:
             try:
                 db.session.delete(medical)
                 db.session.commit()
-                return 'delete'
-            except IndentationError:
+                flash('delete')
+                return 'delete', 204
+            except:
                 db.session.rollback()
-                return jsonify({"message": "Can not delete user!"}), 400
-        return 'none'
+                flash('medical is used! cant delete')
+                return 'medical is used! cant delete', 404
+        flash('none')
+        return 'none', 404
 
     def update_medical(self, medical_id):
         medical = Medical.query.filter_by(id=medical_id).first()
-        if 'x-access-token' in request.headers:
+        c = request.headers.get('Content-Type')
+        if c == 'application/json':
             data = request.json
         else:
             data = request.form
-        type = MedicalType.query.filter_by(name=data['type_name']).first()
-        if not type:
-            return 'none'
         if V.vali_insert_medical(data):
             if medical:
-                medical.name = data['name']
-                medical.type_id = type.id
-                medical.count = data['count']
-                medical.buy_price = data['buy_price']
-                medical.sell_price = data['sell_price']
-                medical.exp_date = data['exp_date']
-                medical.description = data['description']
-                db.session.commit()
-                return 'update', 202
-            return 'none'
+                type = MedicalType.query.filter_by(name=data['type_name']).first()
+                if not type:
+                    flash('none type')
+                    return 'none type', 404
+                if int(data['count']) >= 0 and float(data['buy_price']) >= 0 and float(data['sell_price']) >= 0:
+                    medical.name = data['name']
+                    medical.type_id = type.id
+                    medical.count = data['count']
+                    medical.buy_price = data['buy_price']
+                    medical.sell_price = data['sell_price']
+                    medical.exp_date = data['exp_date']
+                    medical.description = data['description']
+                    db.session.commit()
+                    flash('update')
+                    return 'update', 202
+                flash('not count')
+                return 'not count', 404
+            flash('none')
+            return 'none', 404
+        flash(V.vali_insert_medical(data))
         return V.vali_insert_medical(data)
 
     def search_medical_by_name(self):
         medical = self.show_all_medical()
         output = {}
-        if 'x-access-token' in request.headers:
+        c = request.headers.get('Content-Type')
+        if c == 'application/json':
             data = request.json
         else:
             data = request.form
         search_data = data['search']
         if medical:
-
             for i in medical.values():
                 if search_data in i['name']:
                     item = {'id': i['id'], 'name': i['name'], 'type': i['type'], 'count': i['count'],
@@ -99,7 +121,7 @@ class BackEndMedical:
         output = {}
         if medical:
             for i in medical:
-                item = {'id': i.id, 'name': i.name, 'company':i.company}
+                item = {'id': i.id, 'name': i.name, 'company': i.company}
                 output[i.id] = item
             return output
         return output
@@ -109,10 +131,12 @@ class BackEndMedical:
         if medical_type:
             item = {'id': medical_type.id,'name':medical_type.name, 'company':medical_type.company}
             return item
-        return 'none'
+        flash('none')
+        return 'none', 404
 
     def insert_medical_type(self):
-        if 'x-access-token' in request.headers:
+        c = request.headers.get('Content-Type')
+        if c == 'application/json':
             data = request.json
         else:
             data = request.form
@@ -120,26 +144,31 @@ class BackEndMedical:
             new_medical_type = MedicalType(name=data['name'], company=data['company'])
             db.session.add(new_medical_type)
             db.session.commit()
+            flash('add')
             return 'add', 201
+        flash(V.vali_insert_medical_type(data))
         return V.vali_insert_medical_type(data)
 
 
     def delete_medical_type(self,medical_type_id):
         medical_type = MedicalType.query.filter_by(id=medical_type_id).first()
-        medical = Medical.query.filter_by(type_id=medical_type_id).all()
         if medical_type:
-            if medical:
-                for i in medical:
-                    db.session.delete(i)
-            else:
+            try:
                 db.session.delete(medical_type)
                 db.session.commit()
-                return 'delete'
-        return 'none'
+                flash('delete')
+                return 'delete', 204
+            except:
+                db.session.rollback()
+                flash('medical type is used! cant delete')
+                return 'medical type is used! cant delete', 404
+        flash('none')
+        return 'none', 404
 
     def update_medical_type(self,medical_type_id):
         medical_type = MedicalType.query.filter_by(id=medical_type_id).first()
-        if 'x-access-token' in request.headers:
+        c = request.headers.get('Content-Type')
+        if c == 'application/json':
             data = request.json
         else:
             data = request.form
@@ -148,9 +177,11 @@ class BackEndMedical:
                 medical_type.name = data['name']
                 medical_type.company = data['company']
                 db.session.commit()
+                flash('update')
                 return 'update', 202
             flash('none')
-            return 'none'
+            return 'none', 404
+        flash(V.vali_insert_medical_type(data))
         return V.vali_insert_medical_type(data)
 
 

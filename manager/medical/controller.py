@@ -26,8 +26,9 @@ def insert_medical(current_user):
     return MM.insert_medical(current_user)
 
 @medicals.route('/medical/delete/<medical_id>', methods = ['POST','GET'])
-def del_medical(medical_id):
-    return MM.del_medical(medical_id)
+@token_required
+def del_medical(current_user,medical_id):
+    return MM.del_medical(current_user,medical_id)
 
 @medicals.route('/medical/update/<medical_id>', methods = ['POST','GET'])
 @token_required
@@ -57,5 +58,5 @@ def update_medical_type(current_user,medical_type_id):
 @medicals.route('/medical-type/delete-medical-type/<medical_type_id>', methods = ['Get','POST'])
 @token_required
 def delete_medical_type(current_user,medical_type_id):
-    return MM.del_medical_type(medical_type_id)
+    return MM.del_medical_type(current_user, medical_type_id)
 

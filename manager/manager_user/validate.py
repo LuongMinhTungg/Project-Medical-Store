@@ -60,7 +60,7 @@ class Validate:
         return v.errors
 
     def vali_register_user(self,data):
-        schema = {'name': {'type': 'string', 'empty': False,'required': True,'minlength': 1, 'maxlength': 45},
+        schema = {'name': {'type': 'string', 'empty': False,'required': True,'nullable': False,'minlength': 1, 'maxlength': 45},
                   'username': {'type': 'string', 'empty': False, 'nullable': False, 'required': True,'minlength': 1, 'maxlength': 45},
                   'password': {'type': 'string', 'empty': False, 'nullable': False, 'required': True},
                   'confirm_password':{'type': 'string', 'empty': False, 'nullable': False, 'required': True},
@@ -74,7 +74,7 @@ class Validate:
         return v.errors
 
     def vali_register_user_manager(self,data):
-        schema = {'name': {'type': 'string', 'empty': False,'required': True,'minlength': 1, 'maxlength': 45},
+        schema = {'name': {'type': 'string', 'empty': False,'required': True,'nullable': False,'minlength': 1, 'maxlength': 45},
                   'username': {'type': 'string', 'empty': False, 'nullable': False, 'required': True,'minlength': 1, 'maxlength': 45},
                   'password': {'type': 'string', 'empty': False, 'nullable': False, 'required': True},
                   'confirm_password':{'type': 'string', 'empty': False, 'nullable': False, 'required': True},

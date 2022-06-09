@@ -8,7 +8,7 @@ from flask import Response
 class Validate:
     def vali_insert_medical(self, data):
         schema = {'name': {'type': 'string', 'empty': False, 'required': True, 'nullable': False, 'minlength': 1, 'maxlength': 45},
-                  'type_id': {'type': 'string', 'empty': False, 'nullable': False, 'required': True, 'regex': r'[0-9]'},
+                  'type_name': {'type': 'string', 'empty': False, 'nullable': False, 'required': True, 'minlength': 1, 'maxlength': 45},
                   'count': {'type': 'string', 'empty': False, 'nullable': False, 'required': True, 'regex': r'[0-9]+'},
                   'buy_price': {'type': 'string', 'empty': False, 'nullable': False, 'required': True,'regex': r'[0-9]+.[0-9]+'},
                   'sell_price': {'type': 'string', 'empty': False, 'nullable': False, 'required': True, 'regex': r'[0-9]+.[0-9]+'},
@@ -45,16 +45,6 @@ class Validate:
                   'csrf_token': {'type': 'string'}}
         v = Validator(schema)
         if v.validate(data,schema):
-            return True
-        return v.errors
-
-    def vali_update_medical_type(self,data):
-        schema = {'old_password':{'type': 'string', 'empty': False, 'nullable': False, 'required': True},
-                  'new_password':{'type': 'string', 'empty': False, 'nullable': False, 'required': True},
-                  'confirm_password':{'type': 'string', 'empty': False, 'nullable': False, 'required': True},'submit': {'type': 'string'},
-                  'csrf_token': {'type': 'string'}}
-        v = Validator(schema)
-        if v.validate(data, schema):
             return True
         return v.errors
 

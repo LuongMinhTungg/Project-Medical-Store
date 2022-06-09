@@ -1,16 +1,8 @@
-import datetime
-
-import jwt
 from flask_wtf import FlaskForm
-from werkzeug.security import check_password_hash, generate_password_hash
-from werkzeug.utils import redirect
-from wtforms import StringField, PasswordField, IntegerField, SubmitField, BooleanField, DateField
+from wtforms import StringField, PasswordField, IntegerField, SubmitField, BooleanField, DateField, SelectField
 from wtforms.validators import DataRequired, Length, EqualTo, NumberRange, ValidationError
 from wtforms_components import read_only
-
-from manager.config import app
-from manager.extension import db
-from manager.model.model import Bill, BillDetail, Medical, Customer
+from manager.model.model import Medical
 from flask import request, jsonify, session, url_for, render_template, flash, redirect
 from manager.bill.backend import BackEndBill
 BB = BackEndBill()
@@ -39,10 +31,7 @@ class ManagementBill:
     def add_to_cart(self,current_customer):
         try:
             if request.method == 'POST':
-                if not BB.add_to_cart(current_customer):
-                    flash('fail')
-                    return redirect(url_for('medicals.show_all_medical_customer'))
-                flash('update')
+                BB.add_to_cart(current_customer)
                 return redirect(url_for('medicals.show_all_medical_customer'))
             else:
                 return redirect(url_for('medicals.show_all_medical_customer'))
@@ -52,14 +41,15 @@ class ManagementBill:
     def check_form(self,current_customer, medical_id):
         try:
             check_form = CheckForm(request.form)
+            check_form.medical_id.choices = [medical_id]
             medical_in_cart = BB.check_info(medical_id)
-            check_form.medical_id.data = medical_in_cart['id']
             check_form.name.data = medical_in_cart['name']
-            check_form.count.data = medical_in_cart['count']
             if request.method == 'GET':
+                check_form.count.data = medical_in_cart['count']
                 return render_template('check_form.html', title='Check', form=check_form, current_customer=current_customer)
             else:
-                if check_form.validate_on_submit() == True:
+                check_form.count.data = medical_in_cart['count']
+                if check_form.validate_on_submit():
                     return self.add_to_cart(current_customer)
                 return render_template('check_form.html', title='Check', form=check_form,
                                        current_customer=current_customer)
@@ -68,10 +58,8 @@ class ManagementBill:
 
     def order_medical(self, current_customer):
         try:
-
             if request.method == 'GET':
                 BB.order_medical(current_customer)
-                flash('order')
                 return redirect(url_for('bills.show_cart'))
             return redirect(url_for('medicals.show_all_medical_customer'))
         except AttributeError:
@@ -145,12 +133,11 @@ class ManagementBill:
             if medical:
                 if request.method == 'GET':
                     BB.delete_one_in_cart(current_customer,medical_id)
-                    flash('delete')
                     return redirect(url_for('bills.show_cart'))
                 else:
                     return redirect(url_for('bills.show_cart'))
             else:
-                return "Not found user"
+                return render_template('error_not_found.html', current_customer=current_customer)
         except AttributeError:
             return redirect(url_for('customers.login_customer'))
 
@@ -164,11 +151,11 @@ class ManagementBill:
             if request.method == 'GET':
                 return render_template('check_form.html', title='Check', form=update_form, current_customer=current_customer)
             else:
-                if update_form.validate_on_submit() == True:
-                    if not BB.update_cart(current_customer,medical_id):
-                        flash('fail')
+                if update_form.validate_on_submit():
+                    if BB.update_cart(current_customer,medical_id) == ('update', 202):
                         return redirect(url_for('bills.show_cart'))
-                    return redirect(url_for('bills.show_cart'))
+                    return render_template('check_form.html', title='Check', form=update_form,
+                                           current_customer=current_customer)
                 return render_template('check_form.html', title='Check', form=update_form,
                                        current_customer=current_customer)
         except AttributeError:
@@ -179,7 +166,6 @@ class ManagementBill:
 
             if request.method == 'GET':
                 BB.clear_cart(current_customer)
-                flash('delete')
                 return redirect(url_for('bills.show_cart'))
             else:
                 return redirect(url_for('bills.show_cart'))
@@ -188,25 +174,26 @@ class ManagementBill:
 
 
 class CheckForm(FlaskForm):
-    medical_id = StringField('medical_id', validators=[DataRequired()])
+    medical_id = SelectField('medical_id', validators=[DataRequired()], choices=[])
     name = StringField('name')
-    count = IntegerField('count',validators=[DataRequired()])
-    submit = SubmitField('Add', validators=[DataRequired()])
+    count = IntegerField('count',validators=[DataRequired(), NumberRange(min=1)])
+    submit = SubmitField('Add')
 
     def __init__(self, *args, **kwargs):
         super(CheckForm, self).__init__(*args, **kwargs)
         read_only(self.name)
 
-    def validate_medical_count(self, medical_id):
-        medical = Medical.query.filter_by(id=medical_id.data).first()
-        if self.count.data > medical.count:
-            raise ValidationError('none')
+
+    def validate_medical_count(self, count):
+        medical = Medical.query.filter_by(id=self.medical_id.data).first()
+        if count.data > medical.count:
+            raise ValidationError('count.data > medical.count')
 
 class UpdateForm(FlaskForm):
     medical_id = StringField('medical_id', validators=[DataRequired()])
     name = StringField('name')
     count = IntegerField('count', validators=[DataRequired(), NumberRange(min=1)])
-    submit = SubmitField('Update', validators=[DataRequired()])
+    submit = SubmitField('Update')
 
     def __init__(self, *args, **kwargs):
         super(UpdateForm, self).__init__(*args, **kwargs)

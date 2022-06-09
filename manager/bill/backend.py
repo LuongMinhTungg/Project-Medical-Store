@@ -1,10 +1,3 @@
-import datetime
-
-import pm as pm
-
-from requests import Session
-
-from manager.config import app
 from manager.extension import db
 from manager.model.model import Medical,MedicalType, Bill, BillDetail, Customer
 from flask import Flask, jsonify, request, Response, make_response, render_template, session, Blueprint, flash, redirect, url_for
@@ -23,19 +16,22 @@ class BackEndBill():
             item = {'id':new_bill.id, 'customer_name': new_bill.customer.name, 'customer_username': new_bill.customer.username,
                     'status': new_bill.status, 'added_on': new_bill.added_on}
             return item
-        return 'none'
+        flash('not found user')
+        return 'not found user', 404
 
     def order_medical(self,current_customer):
         cart_name = current_customer.username
         cart = session[cart_name]
         if not cart:
-            return 'cart is empty'
+            flash('cart is empty')
+            return 'cart is empty', 404
         else:
             new_bill = self.create_bill(current_customer.id)
             for i,j in cart.items():
                 medical_id, count = i, j['count']
                 self.add_on_bill_detail(new_bill['id'],medical_id,int(count))
             session[cart_name] = {}
+            flash('add')
             return 'add', 201
 
 
@@ -52,7 +48,7 @@ class BackEndBill():
                 self.increase_count(bill_id, medical_id, count)
                 self.decrease_count(medical_id, count)
             return 'add', 201
-        return 'none'
+        return 'none', 404
 
     def del_medical_billdetail(self, medical_id):
         medical = BillDetail.query.get(medical_id)
@@ -60,12 +56,15 @@ class BackEndBill():
             try:
                 BillDetail.remove(medical)
                 db.session.commit()
-                return "User Deleted"
+                flash('delete')
+                return "Deleted", 204
             except IndentationError:
                 db.session.rollback()
+                flash('cant deleete')
                 return jsonify({"message": "Can not delete medical!"}), 400
         else:
-            return "Not found medical"
+            flash('not found')
+            return "Not found medical", 404
 
     def decrease_count(self, medical_id,count):
         medical = Medical.query.filter_by(id=medical_id).first()
@@ -109,7 +108,7 @@ class BackEndBill():
         c = 1
         if bill_detail:
             for i in bill_detail:
-                item = {'id': i.bill_id, 'medical': i.medical.name, 'count': i.count,
+                item = {'id': i.medical.id, 'medical': i.medical.name, 'count': i.count,
                         'added_on': i.added_on}
                 output[c] = item
                 c = c+1
@@ -127,7 +126,8 @@ class BackEndBill():
     def add_to_cart(self,current_customer):
         try:
             cart_name = current_customer.username
-            if 'x-access-token' in request.headers:
+            c = request.headers.get('Content-Type')
+            if c == 'application/json':
                 data = request.json
             else:
                 data = request.form
@@ -136,7 +136,6 @@ class BackEndBill():
                 count = int(data['count'])
                 medical = Medical.query.filter_by(id=medical_id).first()
                 cart = session.get(cart_name)
-
                 if medical:
                     if not cart:
                         cart = {}
@@ -147,12 +146,17 @@ class BackEndBill():
                         else:
                             cart[medical_id] = {'id':medical.id, 'name':medical.name, 'price':medical.sell_price, 'count':count, 'total_price':count*medical.sell_price}
                         session[cart_name] = cart
-                        return session[cart_name], 201
-                    return {}
-                return {}
+                        flash('add')
+                        return 'add', 201
+                    flash('fail! count > medical.count')
+                    return 'count > medical.count', 404
+                flash('not found')
+                return 'not found'
+            flash(V.vali_add_to_cart(data))
             return V.vali_add_to_cart(data)
         except AttributeError:
-            return 'none'
+            flash('none')
+            return 'none', 404
 
     def show_count(self, current_customer, medical_id):
         cart_name = current_customer.username
@@ -161,8 +165,8 @@ class BackEndBill():
             if medical_id in cart.keys():
                 item = {'id': cart[medical_id]['id'], 'name':cart[medical_id]['name'], 'count': cart[medical_id]['count']}
                 return item
-            return {}
-        return {}
+            return 'none', 404
+        return 'none', 404
 
     def total_price(self, current_customer, medical_id):
         medical_in_cart = self.show_count(current_customer,medical_id)
@@ -185,12 +189,14 @@ class BackEndBill():
         cart_name = current_customer.username
         cart = {}
         session[cart_name] = cart
-        return session[cart_name]
+        flash('clear')
+        return 'clear', 204
 
     def update_cart(self, current_customer, medical_id):
         cart_name = current_customer.username
         cart = self.show_cart(current_customer)
-        if 'x-access-token' in request.headers:
+        c = request.headers.get('Content-Type')
+        if c == 'application/json':
             data = request.json
         else:
             data = request.form
@@ -202,10 +208,14 @@ class BackEndBill():
                     cart[medical_id]['count'] = count
                     cart[medical_id]['total_price'] = count*medical.sell_price
                     session[cart_name] = cart
-                    return session[cart_name]
-                return {}
+                    flash('update')
+                    return 'update', 202
+                flash('count > medical.count')
+                return 'count > medical.count', 404
+            flash(V.vali_update_cart(data))
             return V.vali_update_cart(data)
-        return {}
+        flash('none')
+        return 'none', 404
 
 
 
@@ -214,12 +224,16 @@ class BackEndBill():
         medical = Medical.query.filter_by(id=medical_id).first()
         cart = session[cart_name]
         if medical:
-            if medical_id in cart.keys():
+            if medical_id not in cart.keys():
+                flash('none')
+                return 'none', 404
+            else:
                 cart.pop(str(medical_id))
                 session[cart_name] = cart
-                return 'delete'
-            return {}
-        return {}
+                flash('delete')
+                return 'delete', 204
+        flash('none')
+        return 'none', 404
 
 
 

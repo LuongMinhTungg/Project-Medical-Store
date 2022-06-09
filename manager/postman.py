@@ -28,26 +28,21 @@ def register_user():
 def change_password():
     return BackEndManagerUser().change_password()
 
-@postmans.route('/backend/user/update/<username>', methods=['PUT'])
-@token_required
-@check_permiss(['admin','manager'])
-def update_user(current_user,username):
-    return BackEndManagerUser().update_user(current_user,username)
 
 @postmans.route('/backend/user/update-account', methods=['PUT'])
 @token_required
 def update_account_user(current_user):
-    return BackEndManagerUser().update_user(current_user.username)
+    return BackEndManagerUser().update_user(current_user, current_user.username)
 
 @postmans.route('/backend/user/reset-password/<username>', methods=['PUT'])
 @token_required
-def reset_password_user(username):
+def reset_password_user(current_user, username):
     return BackEndManagerUser().reset_password(username)
 
 @postmans.route('/backend/user/get/<username>',methods = ['GET'])
 @token_required
 def get_user(current_user,username):
-    return BackEndManagerUser().get_user(username)
+    return BackEndManagerUser().get_user(current_user,username)
 
 @postmans.route('/backend/user/get-all',methods = ['GET'])
 @token_required
@@ -58,27 +53,56 @@ def get_all_user(current_user):
 @postmans.route('/backend/user/get-account', methods=['GET'])
 @token_required
 def get_account_user(current_user):
-    return BackEndManagerUser().get_user(current_user.username)
+    return BackEndManagerUser().get_user(current_user,current_user.username)
 
 @postmans.route('/backend/user/insert', methods=['POST'])
 @token_required
+@check_permiss(['admin', 'manager'])
 def insert_user(current_user):
-    return BackEndManagerUser().insert_user()
+    return BackEndManagerUser().insert_user(current_user)
 
 @postmans.route('/backend/user/delete/<username>', methods=['DELETE'])
 @token_required
-def delete_user(username):
-    return BackEndManagerUser().del_user(username)
+@check_permiss(['admin', 'manager'])
+def delete_user(current_user, username):
+    return BackEndManagerUser().del_user(current_user, username)
+
+@postmans.route('/backend/user/update/<username>', methods=['PUT'])
+@token_required
+@check_permiss(['admin','manager'])
+def update_user(current_user,username):
+    return BackEndManagerUser().update_user(current_user,username)
 
 @postmans.route('/backend/user/search',methods=['POST'])
 @token_required
-def search_user():
+def search_user(current_user):
     return BackEndManagerUser().search_user_by_username()
 
 @postmans.route('/backend/user/insert-role',methods=['POST'])
 @token_required
-def insert_role():
+@check_permiss(['admin'])
+def insert_role(current_user):
     return BackEndManagerUser().insert_role()
+
+
+@postmans.route('/backend/user/delete-role/<role_id>', methods=['DELETE'])
+@token_required
+@check_permiss(['admin'])
+def delete_role(current_user, role_id):
+    return BackEndManagerUser().delete_role(role_id)
+
+@postmans.route('/backend/user/update-role/<role_id>', methods=['PUT'])
+@token_required
+@check_permiss(['admin'])
+def update_role(current_user,role_id):
+    return BackEndManagerUser().update_role(role_id)
+
+
+@postmans.route('/backend/user/get=all-role', methods=['GET'])
+@token_required
+@check_permiss(['admin'])
+def get_all_role(current_user):
+    return BackEndManagerUser().get_all_role()
 
 @postmans.route('/backend/customer/login', methods=['POST'])
 def login_customer():
@@ -90,22 +114,22 @@ def register_customer():
 
 @postmans.route('/backend/customer/reset-password/<username>', methods=['PUT'])
 @token_customer_required
-def reset_password_customer(username):
+def reset_password_customer(current_customer,username):
     return BackEndCustomer().reset_password_customer(username)
 
 @postmans.route('/backend/customer/change-password', methods=['POST'])
 def change_password_customer():
     return BackEndCustomer().change_password()
 
-@postmans.route('/backend/customer/update-account/<username>', methods=['PUT'])
+@postmans.route('/backend/customer/update-account', methods=['PUT'])
 @token_customer_required
-def update_account_customer(username):
-    return BackEndCustomer().update_account_customer(username)
+def update_customer_account(current_customer):
+    return BackEndCustomer().update_customer_account(current_customer.username)
 
-@postmans.route('/backend/customer/get-account/<username>',methods=['GET'])
+@postmans.route('/backend/customer/get-account',methods=['GET'])
 @token_customer_required
-def get_account_customer(username):
-    return BackEndCustomer().get_account_customer(username)
+def get_customer_account(current_customer):
+    return BackEndCustomer().get_account_customer(current_customer.username)
 
 @postmans.route('/backend/medical/show-all')
 def show_all_medical():
@@ -117,7 +141,7 @@ def show_medical(medical_id):
 
 @postmans.route('/backend/medical/insert',methods=['POST'])
 @token_required
-def insert_medical():
+def insert_medical(current_user):
     return BackEndMedical().insert_medical()
 
 @postmans.route('/backend/medical/delete/<medical_id>',methods=['DELETE'])
@@ -127,27 +151,27 @@ def delete_medical(current_user,medical_id):
 
 @postmans.route('/backend/medical/update/<medical_id>',methods=['PUT'])
 @token_required
-def update_medical(medical_id):
+def update_medical(current_user,medical_id):
     return BackEndMedical().update_medical(medical_id)
 
 @postmans.route('/backend/medical/show-all')
 @token_required
-def show_all_medical_type():
+def show_all_medical_type(current_user):
     return BackEndMedical().show_all_medical_type()
 
 @postmans.route('/backend/medical-type/show/<medical_type_id>')
 @token_required
-def show_medical_type(medical_type_id):
+def show_medical_type(current_user,medical_type_id):
     return BackEndMedical().show_medical_type(medical_type_id)
 
 @postmans.route('/backend/medical-type/insert',methods=['POST'])
 @token_required
-def insert_medical_type():
+def insert_medical_type(current_user):
     return BackEndMedical().insert_medical_type()
 
 @postmans.route('/backend/medical-type/update/<medical_type_id>',methods=['PUT'])
 @token_required
-def update_medical_type(medical_type_id):
+def update_medical_type(current_user, medical_type_id):
     return BackEndMedical().update_medical_type(medical_type_id)
 
 @postmans.route('/backend/medicalt-type/delete/<medical_type>',methods=['DELETE'])

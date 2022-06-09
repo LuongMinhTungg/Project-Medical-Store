@@ -33,10 +33,3 @@ def reset_password_customer(current_customer,username):
 def customer_account(current_customer,username):
     return MC.get_customer(current_customer, username)
 
-@customers.route('/create_bill/<int:customer_id>', methods = ['Get'])
-def create_bill(customer_id):
-    return MC.create_bill(customer_id)
-
-@customers.route('/delete_medical_billdetail/<int:medical_id>', methods = ['DELETE'])
-def delete_medical_billdetail(medical_id):
-    return MC.del_medical_billdetail(medical_id)

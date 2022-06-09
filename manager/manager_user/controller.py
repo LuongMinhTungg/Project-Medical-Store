@@ -50,8 +50,6 @@ def get_all_user(current_user):
 @managers.route('/get-user/<username>',methods = ['GET','POST'])
 @token_required
 def get_user(current_user,username):
-    if not current_user:
-        return 'none'
     return MU.get_user(current_user,username)
 
 @managers.route('/reset-password/<username>',methods = ['GET','POST'])
@@ -81,5 +79,12 @@ def insert_role(current_user):
 @check_permiss(['admin'])
 def update_role(current_user,role_id):
     return MU.update_role(current_user,role_id)
+
+
+@managers.route('/delete-role/<role_id>', methods=['POST','GET'])
+@token_required
+@check_permiss(['admin'])
+def delete_role(current_user,role_id):
+    return MU.delete_role(current_user,role_id)
 
 

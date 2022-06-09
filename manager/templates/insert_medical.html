@@ -19,16 +19,16 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
-                    {{ form.type_id.label(class="form-control-label") }}
-                    {% if form.type_id.errors %}
-                        {{ form.type_id(class="form-control form-control-lg is-invalid") }}
+                    {{ form.type_name.label(class="form-control-label") }}
+                    {% if form.type_name.errors %}
+                        {{ form.type(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
-                            {% for error in form.type_id.errors %}
+                            {% for error in form.type_name.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.type_id(class="form-control form-control-lg") }}
+                        {{ form.type_name(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
                 <div class="form-group">
@@ -60,7 +60,7 @@
                 <div class="form-group">
                     {{ form.sell_price.label(class="form-control-label") }}
                     {% if form.sell_price.errors %}
-                        {{ form.role_id(class="form-control form-control-lg is-invalid") }}
+                        {{ form.sell_price(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
                             {% for error in form.sell_price.errors %}
                                 <span>{{ error }}</span>

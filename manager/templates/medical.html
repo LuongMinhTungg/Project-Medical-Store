@@ -35,7 +35,7 @@
                 <div class="form-group">
                     {{ form.count.label(class="form-control-label") }}
                     {% if form.count.errors %}
-                        {{ form.role(class="form-control form-control-lg is-invalid") }}
+                        {{ form.count(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
                             {% for error in form.count.errors %}
                                 <span>{{ error }}</span>

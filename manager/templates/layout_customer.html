@@ -39,8 +39,8 @@
                 <li><a class="nav-item nav-link" href="{{ url_for('customers.customer_account',username = current_customer.username) }}">Account</a>
                     <div class="account-sup-menu">
                         <ul>
-                            <li><a href="{{ url_for('customers.reset_password_customer', username = current_customer.username) }}">Reset Password</a></li>
-                            <li><a href="{{ url_for('customers.logout_customer') }}">Logout</a></li>
+                            <li><a style="color: #cbd5db" href="{{ url_for('customers.reset_password_customer', username = current_customer.username) }}">Reset Password</a></li>
+                            <li><a style="color: #cbd5db" href="{{ url_for('customers.logout_customer') }}">Logout</a></li>
                         </ul>
                     </div>
                 </li>

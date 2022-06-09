@@ -1,14 +1,6 @@
-import datetime
-
-
-from manager.extension import app
-from manager.static.user import ManagementCustomer as MC
 from flask import Flask, jsonify, request, Response, make_response, render_template, session, Blueprint, url_for, redirect
 from manager.token import token_required, token_customer_required
-from manager.model.model import ManagerUser
-from manager.templates.admin import *
 
-import uuid
 
 
 indexs = Blueprint("indexs", __name__)
@@ -32,6 +24,8 @@ def index_customer(current_customer):
 @token_required
 def about(current_user):
     return render_template('about.html',current_user=current_user,role_user=current_user.role.name)
+
+
 
 
 
