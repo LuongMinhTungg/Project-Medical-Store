@@ -5,8 +5,9 @@ from wtforms_components import read_only
 from manager.model.model import Medical
 from flask import request, jsonify, session, url_for, render_template, flash, redirect
 from manager.bill.backend import BackEndBill
+from manager.medical.backend import  BackEndMedical
 BB = BackEndBill()
-
+BM = BackEndMedical()
 class ManagementBill:
     def show_cart(self, current_customer):
         try:
@@ -28,21 +29,23 @@ class ManagementBill:
             return redirect(url_for('customers.login_customer'))
 
 
-    def add_to_cart(self,current_customer):
+    def add_to_cart(self,current_customer, medical_id):
         try:
+            page_num = BM.get_page_number(medical_id)
+
             if request.method == 'POST':
                 BB.add_to_cart(current_customer)
-                return redirect(url_for('medicals.show_all_medical_customer'))
+                return redirect(url_for('medicals.show_all_medical_customer', page_num=page_num))
             else:
-                return redirect(url_for('medicals.show_all_medical_customer'))
+                return redirect(url_for('medicals.show_all_medical_customer', page_num=page_num))
         except AttributeError:
             return redirect(url_for('customers.login_customer'))
 
     def check_form(self,current_customer, medical_id):
         try:
             check_form = CheckForm(request.form)
-            check_form.medical_id.choices = [medical_id]
             medical_in_cart = BB.check_info(medical_id)
+            check_form.medical_id.data = medical_in_cart['id']
             check_form.name.data = medical_in_cart['name']
             if request.method == 'GET':
                 check_form.count.data = medical_in_cart['count']
@@ -50,11 +53,13 @@ class ManagementBill:
             else:
                 check_form.count.data = medical_in_cart['count']
                 if check_form.validate_on_submit():
-                    return self.add_to_cart(current_customer)
+                    return self.add_to_cart(current_customer, medical_id)
                 return render_template('check_form.html', title='Check', form=check_form,
                                        current_customer=current_customer)
         except AttributeError:
             return redirect(url_for('customers.login_customer'))
+        except:
+            return render_template('error_not_found_customer.html', current_customer=current_customer)
 
     def order_medical(self, current_customer):
         try:
@@ -65,33 +70,35 @@ class ManagementBill:
         except AttributeError:
             return redirect(url_for('customers.login_customer'))
 
-    def show_all_bill(self,current_user):
+    def show_all_bill(self,current_user, page_num):
         try:
-            all_bill = BB.show_bill()
+            all_bill = BB.show_bill(page_num)
             output_1 = []
             headers = ('id','customer name', 'status', 'added on')
+            pages = BB.get_pages_bill(page_num)
             if request.method == 'GET':
                 item = []
                 for i in all_bill.values():
                     item = [i['id'],i['customer'], i['status'], i['added_on']]
                     output_1.append(item)
                 return render_template('list_bill.html', title='All Medical Type', headers=headers, data=output_1,
-                                       current_user=current_user, row=item)
+                                       current_user=current_user, row=item, pages=pages)
         except AttributeError:
             return redirect(url_for('customers.login_customer'))
 
-    def show_bill_customer(self,current_customer, customer_id):
+    def show_bill_customer(self,current_customer, customer_id, page_num):
         try:
-            bill = BB.show_bill_customer(customer_id)
+            bill = BB.show_bill_customer(customer_id, page_num)
             output_1 = []
             headers = ('id', 'customer name', 'status', 'added on')
+            pages = BB.get_page_bill_customer(customer_id, 1)
             if request.method == 'GET':
                 item = []
                 for i in bill.values():
                     item = [i['id'], i['customer'], i['status'], i['added_on']]
                     output_1.append(item)
                 return render_template('list_bill_customer.html', title='All Medical Type', headers=headers, data=output_1,
-                                       current_customer=current_customer, row=item)
+                                       current_customer=current_customer, row=item, pages=pages)
         except AttributeError:
             return redirect(url_for('customers.login_customer'))
 
@@ -174,7 +181,7 @@ class ManagementBill:
 
 
 class CheckForm(FlaskForm):
-    medical_id = SelectField('medical_id', validators=[DataRequired()], choices=[])
+    medical_id = StringField('medical_id', validators=[DataRequired()])
     name = StringField('name')
     count = IntegerField('count',validators=[DataRequired(), NumberRange(min=1)])
     submit = SubmitField('Add')
@@ -182,6 +189,7 @@ class CheckForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(CheckForm, self).__init__(*args, **kwargs)
         read_only(self.name)
+
 
 
     def validate_medical_count(self, count):

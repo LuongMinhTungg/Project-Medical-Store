@@ -41,5 +41,4 @@ def create_app(config_file="config.py"):
 
 
 
-
     return app

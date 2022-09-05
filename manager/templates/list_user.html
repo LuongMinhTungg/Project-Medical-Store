@@ -2,10 +2,10 @@
 {% extends "layout.html" %}
 {% block content %}
     <div class="content-section">
-        <form method="POST" action="">
+        <form method="POST"  action="">
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
-                <legend class="border-bottom mb-4">All Account</legend>
+                <legend class="border-bottom mb-4">{{ title }}</legend>
                 <div class="form-group">
                     {{ form.search.label(class="form-control-label") }}
                     {% if form.search.errors %}
@@ -40,7 +40,20 @@
 
             {% endfor %}
             </div>
-        </table></div>
+        </table>
+            {% for page in pages.iter_pages(left_edge=2, right_edge=2) %}
+                {% if page %}
+                {% if search %}
+                    <a class="button" type="button" href="{{ url_for('managers.search_user', page_num = page) }}">{{ page }}</a>
+                {% else %}
+                    <a class="button" type="button" href="{{ url_for('managers.get_all_user', page_num = page) }}">{{ page }}</a>
+                {% endif %}
+            {% else %}
+            ...
+            {% endif %}
+            {% endfor %}
+        </div>
+
     </form>
     </div>
 {% endblock content %}

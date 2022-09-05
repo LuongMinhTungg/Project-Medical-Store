@@ -50,6 +50,13 @@ def get_user(current_user,username):
 def get_all_user(current_user):
     return BackEndManagerUser().get_all_user()
 
+@postmans.route('/backend/user/get-page/<page_num>', methods=['GET'])
+@token_required
+@check_permiss(['admin', 'manager'])
+def get_user_by_page(current_user, page_num):
+    return BackEndManagerUser().get_user_by_page(page_num)
+
+
 @postmans.route('/backend/user/get-account', methods=['GET'])
 @token_required
 def get_account_user(current_user):
@@ -73,10 +80,10 @@ def delete_user(current_user, username):
 def update_user(current_user,username):
     return BackEndManagerUser().update_user(current_user,username)
 
-@postmans.route('/backend/user/search',methods=['POST'])
+@postmans.route('/backend/user/search/<page_num>',methods=['POST', 'GET'])
 @token_required
-def search_user(current_user):
-    return BackEndManagerUser().search_user_by_username()
+def search_user(current_user, page_num):
+    return BackEndManagerUser().search_user_by_username(page_num)
 
 @postmans.route('/backend/user/insert-role',methods=['POST'])
 @token_required
@@ -135,6 +142,10 @@ def get_customer_account(current_customer):
 def show_all_medical():
     return BackEndMedical().show_all_medical()
 
+@postmans.route('/backend/medical/show-all/<page_num>')
+def show_all_medical_page(page_num):
+    return BackEndMedical().show_all_medical_page(page_num)
+
 @postmans.route('/backend/medical/show/<medical_id>')
 def show_medical(medical_id):
     return BackEndMedical().show_medical(medical_id)
@@ -154,10 +165,20 @@ def delete_medical(current_user,medical_id):
 def update_medical(current_user,medical_id):
     return BackEndMedical().update_medical(medical_id)
 
-@postmans.route('/backend/medical/show-all')
+@postmans.route('/backend/medical/search', methods=['POST'])
+@token_required
+def search_medical(current_user):
+    return BackEndMedical().search_medical_by_name()
+
+@postmans.route('/backend/medical-type/show-all')
 @token_required
 def show_all_medical_type(current_user):
     return BackEndMedical().show_all_medical_type()
+
+@postmans.route('/backend/medical-type/show-all/<page_num>')
+@token_required
+def show_all_medical_type_page(current_user, page_num):
+    return BackEndMedical().show_medical_type_page(page_num)
 
 @postmans.route('/backend/medical-type/show/<medical_type_id>')
 @token_required
@@ -174,9 +195,15 @@ def insert_medical_type(current_user):
 def update_medical_type(current_user, medical_type_id):
     return BackEndMedical().update_medical_type(medical_type_id)
 
-@postmans.route('/backend/medicalt-type/delete/<medical_type>',methods=['DELETE'])
-def del_medical_type(medical_type):
+@postmans.route('/backend/medical-type/delete/<medical_type>',methods=['DELETE'])
+@token_required
+def del_medical_type(current_user, medical_type):
     return BackEndMedical().delete_medical_type(medical_type)
+
+@postmans.route('/backend/medical-type/search', methods=['POST'])
+@token_required
+def search_medical_type(current_user):
+    return BackEndMedical().search_medical_type_by_name()
 
 
 @postmans.route('/backend/bill/order-medical',methods=['POST'])
@@ -204,17 +231,17 @@ def delete_one_in_cart(current_customer,medical_id):
 def update_cart(current_customer, medical_id):
     return BackEndBill().update_cart(current_customer,medical_id)
 
-@postmans.route('/backend/bill/show-all', methods=['GET'])
+@postmans.route('/backend/bill/show-all/<page_num>', methods=['GET'])
 @token_required
-def show_all_bill(current_user):
-    return BackEndBill().show_bill()
+def show_all_bill(current_user, page_num):
+    return BackEndBill().show_bill(page_num)
 
 @postmans.route('/backend/bill/show-bill-detail/<bill_id>', methods=['GET'])
 @token_required
 def show_bill_detail(current_user,bill_id):
     return BackEndBill().show_bill_detail(bill_id)
 
-@postmans.route('/backend/customer/bill/show/<customer_id>', methods=['GET'])
+@postmans.route('/backend/customer/bill/show/<page_num>', methods=['GET'])
 @token_customer_required
-def show_bill_cusomer(current_customer,customer_id):
-    return BackEndBill().show_bill_customer(customer_id)
+def show_bill_customer(current_customer,page_num):
+    return BackEndBill().show_bill_customer(current_customer.id,page_num)

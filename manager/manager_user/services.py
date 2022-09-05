@@ -12,6 +12,9 @@ V = V()
 BU = BU()
 
 class ManagementUser:
+    search_list={}
+    pages={}
+    data=''
     def register(self):
         register_form = RegistrationForm(request.form)
         if request.method == 'POST':
@@ -31,10 +34,10 @@ class ManagementUser:
                     resp.set_cookie('token', value=token)
                     return resp
                 except TypeError:
-                    return render_template('login.html', title='login', form=form)
+                    return render_template('login.html', title='Login', form=form)
             else:
                 flash('fail')
-                return render_template('login.html', title='login', form=form)
+                return render_template('login.html', title='Login', form=form)
         return render_template('login.html', title='login', form=form)
 
     def insert_user(self,current_user):
@@ -51,9 +54,10 @@ class ManagementUser:
             if request.method == 'POST':
                 if insert_form.validate_on_submit():
                     if BU.insert_user(current_user) == ('add', 201):
-                        return redirect(url_for('managers.get_all_user'))
+                        page_num = BU.get_pages(1).pages
+                        return redirect(url_for('managers.get_all_user', page_num=page_num))
                     return redirect(url_for('managers.insert_user'))
-            return render_template('register.html', title='insert user', form=insert_form,
+            return render_template('insert_user.html', title='insert user', form=insert_form,
                                        current_user=current_user)
         except AttributeError:
             return redirect(url_for('managers.login'))
@@ -62,14 +66,15 @@ class ManagementUser:
     def del_user(self,current_user, username):
         try:
             user = ManagerUser.query.filter_by(username=username).first()
+            page_num = BU.get_page_user(username)
             if user:
                 if request.method == 'GET':
                     if current_user.role.name == 'manager' and user.role.name == 'admin':
                         return render_template('error_not_role.html', current_user=current_user)
                     BU.del_user(current_user,username)
-                    return redirect(url_for('managers.get_all_user'))
+                    return redirect(url_for('managers.get_all_user', page_num=page_num))
                 else:
-                    return redirect(url_for('managers.get_all_user'))
+                    return redirect(url_for('managers.get_all_user', page_num=page_num))
             else:
                 return "Not found user"
         except AttributeError:
@@ -79,13 +84,14 @@ class ManagementUser:
     def update_user(self,current_user,username):
         try:
             user = ManagerUser.query.filter_by(username=username).first()
+            page_num = BU.get_page_user(username)
             if user:
                 if current_user.role.name == 'manager' and user.role.name == 'admin':
                     return render_template('error_not_role.html', current_user=current_user)
                 else:
                     if request.method == 'POST':
                         if BU.update_user(current_user,username) == ('update', 202):
-                            return redirect(url_for('managers.get_all_user'))
+                            return redirect(url_for('managers.get_all_user', page_num=page_num))
                         return redirect(url_for('managers.get_user', username=username))
                     else:
                         return redirect(url_for('managers.get_user', username=username))
@@ -93,34 +99,60 @@ class ManagementUser:
         except AttributeError:
             return redirect(url_for('managers.login'))
 
-    def get_all_user(self,current_user):
+    def get_all_user(self,current_user, page_num):
         try:
-            all_user = BU.get_all_user()
             search_form = SearchForm(request.form)
-            output_1 = []
             headers = ('name', 'username', 'role', 'phone', 'join_date')
             if request.method == 'GET':
+                all_user = BU.get_user_by_page(page_num)
+                pages = BU.get_pages(page_num)
                 item = []
+                output_1 = []
                 for i in all_user.values():
                     item = [i['name'],i['username'],i['role'],i['phone'],i['join_date']]
                     output_1.append(item)
                 return render_template('list_user.html',title='All User', headers=headers, data=output_1,
-                                       form=search_form, current_user=current_user, row=item)
-            else:
-                output_2 = []
-                item = []
-                list = BU.search_user_by_username()
-                for i in list.values():
-                    item = [i['name'], i['username'], i['role'], i['phone'], i['join_date']]
-                    output_2.append(item)
-                return render_template('list_user.html', title='User', headers=headers, data=output_2,
-                                       form=search_form,current_user=current_user)
+                                       form=search_form, current_user=current_user, row=item, pages=pages)
 
+            else:
+                list_user = BU.search_user_by_username()
+                pages = BU.get_pages_search(page_num)
+                self.search_list = list_user
+                self.pages = pages
+                self.data = search_form.search.data
+                return redirect(url_for('managers.search_user', page_num=1))
         except AttributeError:
             return redirect(url_for('managers.login'))
 
+    def search_user(self, current_user, page_num):
+        try:
+            search_form = SearchForm(request.form)
+            headers = ('name', 'username', 'role', 'phone', 'join_date')
+            item = []
+            output_1 = []
+            if request.method == 'GET':
+                if self.search_list == ('none', 404):
+                    search_form.search.data = self.data
+                    return render_template('list_user.html', title='All User', headers=headers, data=output_1,
+                                           form=search_form, current_user=current_user, row=item, pages=self.pages, search='a')
+                else:
+                    search_form.search.data = self.data
+                    for key in self.search_list.keys():
+                        if int(page_num) == key:
+                            for i in self.search_list[key]:
+                                item = [i['name'], i['username'], i['role'], i['phone'], i['join_date']]
+                                output_1.append(item)
+                            return render_template('list_user.html', title='User', headers=headers, data=output_1,
+                                                   form=search_form, current_user=current_user, row=item, pages=self.pages, search='a')
+                    return redirect(url_for('managers.get_all_user', page_num=1))
+            else:
+                if search_form.search.data == '':
+                    return redirect(url_for('managers.get_all_user', page_num=1))
+                return self.get_all_user(current_user, page_num)
+        except AttributeError:
+            return redirect(url_for('managers.login'))
 
-    def get_user(self,current_user,username):
+    def get_user(self, current_user, username):
         try:
             user_form = UserForm(request.form)
             user = BU.get_user(current_user, username)
@@ -147,9 +179,11 @@ class ManagementUser:
                         return self.update_user(current_user,username)
                     return render_template('user_account.html', title='account', form=user_form,
                                            current_user=current_user)
-
         except AttributeError:
             return redirect(url_for('managers.login'))
+
+        except:
+            return render_template('error_not_found.html', current_user=current_user)
 
 
 
@@ -162,8 +196,9 @@ class ManagementUser:
         try:
             reset_password_form = ResetPasswordForm(request.form)
             if request.method == 'POST':
-                if BU.reset_password(username) == ('reset', 202):
-                    return redirect(url_for('indexs.index'))
+                if reset_password_form.validate_on_submit():
+                    if BU.reset_password(username) == ('reset', 202):
+                        return redirect(url_for('indexs.index'))
                 return render_template('reset_password.html', title='reset_password', form=reset_password_form,
                                        current_user=current_user)
             return render_template('reset_password.html',title = 'reset_password', form=reset_password_form,
@@ -291,6 +326,10 @@ class ChangePasswordForm(FlaskForm):
     submit = SubmitField('Change')
 
 class SearchForm(FlaskForm):
+    search = StringField('search')
+    submit = SubmitField('Search')
+
+class SearchForm2(FlaskForm):
     search = StringField('search')
     submit = SubmitField('Search')
 

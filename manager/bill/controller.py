@@ -25,10 +25,10 @@ def check_info(current_customer, medical_id):
 def order_medical(current_customer):
     return MB.order_medical(current_customer)
 
-@bills.route('/bill/show-all', methods=['POST','GET'])
+@bills.route('/bill/show-all/<page_num>', methods=['POST','GET'])
 @token_required
-def show_all_bill(current_customer):
-    return MB.show_all_bill(current_customer)
+def show_all_bill(current_customer, page_num):
+    return MB.show_all_bill(current_customer, page_num)
 
 
 @bills.route('/bill/show-bill-detail/<bill_id>', methods=['POST','GET'])
@@ -37,10 +37,10 @@ def show_bill_detail(current_user, bill_id):
     return MB.show_bill_detail(current_user,bill_id)
 
 
-@bills.route('/customer/bill/show', methods=['POST','GET'])
+@bills.route('/customer/bill/show/<page_num>', methods=['POST','GET'])
 @token_customer_required
-def show_bill_customer(current_customer):
-    return MB.show_bill_customer(current_customer, current_customer.id)
+def show_bill_customer(current_customer, page_num):
+    return MB.show_bill_customer(current_customer, current_customer.id, page_num)
 
 
 @bills.route('/customer/bill/show-bill-detail/<bill_id>', methods=['POST','GET'])

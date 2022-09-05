@@ -27,8 +27,8 @@
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
               <a class="nav-item nav-link" href="/customer">Home</a>
-              <a class="nav-item nav-link" href="/customer/medical/show-all ">Medical</a>
-                <a class="nav-item nav-link" href="/customer/bill/show ">Bill</a>
+              <a class="nav-item nav-link" href="{{ url_for('medicals.show_all_medical_customer', page_num=1) }}">Medical</a>
+                <a class="nav-item nav-link" href="{{ url_for('bills.show_bill_customer', page_num=1) }}">Bill</a>
               <a class="nav-item nav-link" href="#">About</a>
             </div>
             <!-- Navbar Right Side -->
@@ -36,10 +36,10 @@
                 <ul>
               {% if current_customer %}
                 <a class="nav-item nav-link" href="{{ url_for('bills.show_cart') }}">Cart</a>
-                <li><a class="nav-item nav-link" href="{{ url_for('customers.customer_account',username = current_customer.username) }}">Account</a>
+                <li><a class="nav-item nav-link" href="{{ url_for('customers.customer_account') }}">Account</a>
                     <div class="account-sup-menu">
                         <ul>
-                            <li><a style="color: #cbd5db" href="{{ url_for('customers.reset_password_customer', username = current_customer.username) }}">Reset Password</a></li>
+                            <li><a style="color: #cbd5db" href="{{ url_for('customers.reset_password_customer') }}">Reset Password</a></li>
                             <li><a style="color: #cbd5db" href="{{ url_for('customers.logout_customer') }}">Logout</a></li>
                         </ul>
                     </div>

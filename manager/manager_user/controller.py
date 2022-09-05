@@ -35,29 +35,37 @@ def logout():
 def login():
     return MU.login()
 
+@managers.route('/get-account',methods = ['GET','POST'])
+@token_required
+def get_account(current_user):
+    return MU.get_user(current_user,current_user.username)
+
 @managers.route('/update-user/<username>', methods = ['POST','GET'])
 @token_required
 @check_permiss(['admin','manager'])
 def update_user(current_user, username):
     return MU.update_user(current_user,username)
 
-@managers.route('/get-all-user',methods = ['GET','POST'])
+@managers.route('/get-all-user/<page_num>',methods = ['GET','POST'])
 @token_required
 @check_permiss(['admin', 'manager', 'staff'])
-def get_all_user(current_user):
-    return MU.get_all_user(current_user)
+def get_all_user(current_user,page_num):
+    return MU.get_all_user(current_user, page_num)
+
+@managers.route('/search-user/<page_num>', methods=['GET','POST'])
+@token_required
+def search_user(current_user, page_num):
+    return MU.search_user(current_user, page_num)
 
 @managers.route('/get-user/<username>',methods = ['GET','POST'])
 @token_required
 def get_user(current_user,username):
     return MU.get_user(current_user,username)
 
-@managers.route('/reset-password/<username>',methods = ['GET','POST'])
+@managers.route('/reset-password',methods = ['GET','POST'])
 @token_required
-def reset_password(current_user,username):
-    if not current_user:
-        return 'none'
-    return MU.reset_password(current_user,username)
+def reset_password(current_user):
+    return MU.reset_password(current_user,current_user.username)
 
 @managers.route('/get-all-role')
 @token_required

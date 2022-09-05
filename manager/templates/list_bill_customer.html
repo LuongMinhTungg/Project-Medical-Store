@@ -24,6 +24,13 @@
             {% endfor %}
             </div>
         </table>
+        {% for page in pages.iter_pages(left_edge=2, right_edge=2) %}
+            {% if page %}
+                <a class="button" type="button" href="{{ url_for('bills.show_bill_customer', page_num = page) }}">{{ page }}</a>
+            {% else %}
+            ...
+            {% endif %}
+        {% endfor %}
         </div>
         </form>
     </div>

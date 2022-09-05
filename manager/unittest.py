@@ -66,7 +66,8 @@ class TestApi(BaseCase):
             "username": 'admin',
             "password": '123'
         })
-        response = self.app.post('http://127.0.0.1:3000/backend/user/login', data=user, headers={"Content-Type": "application/json"})
+        response = self.app.post('http://127.0.0.1:5555/backend/user/login', data=user,
+                                 headers={"Content-Type": "application/json"})
         self.assertEqual(response.status_code, 200)
         print(response.data)
         return bytes.fromhex(response.data.hex()).decode('utf-8')
@@ -74,7 +75,7 @@ class TestApi(BaseCase):
     def test_login_customer(self):
         customer = json.dumps({
             "username": 'a1',
-            "password": '123'
+            "password": '1234'
         })
         response = self.app.post('http://127.0.0.1:3000/backend/customer/login', data=customer, headers={"Content-Type": "application/json"})
         self.assertEqual(response.status_code, 200)
@@ -82,18 +83,18 @@ class TestApi(BaseCase):
 
     def test_insert_user(self):
         token = self.test_login()
-
         user = json.dumps({
-            "name":"manager_4",
-            "username":"manager_4",
+            "name":"manager_10",
+            "username":"manager_10",
             "password":"123",
             "confirm_password":"123",
             "role":"manager",
             "phone":"33332224444"})
 
-        response = self.app.post('http://127.0.0.1:3000/backend/user/insert',data=user, headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"})
+        response = self.app.post('http://127.0.0.1:5555/backend/user/insert',data=user,
+                                 headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"})
 
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 409)
         print(response.data)
 
     def test_insert_user_1(self):
@@ -107,7 +108,8 @@ class TestApi(BaseCase):
             "role":"manager",
             "phone":"33332224444"})
 
-        response = requests.post('http://127.0.0.1:3000/backend/user/insert',data=user, headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"})
+        response = requests.post('http://127.0.0.1:5555/backend/user/insert',data=user,
+                                 headers={"Content-Type": "application/json", "Authorization": f"Bearer {token}"})
 
         self.assertEqual(response.status_code, 201)
         print(response.request.body)

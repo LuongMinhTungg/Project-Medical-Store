@@ -1,4 +1,4 @@
-from manager.extension import db
+from manager.extension import db, check_data
 from manager.model.model import Medical,MedicalType, Bill, BillDetail, Customer
 from flask import Flask, jsonify, request, Response, make_response, render_template, session, Blueprint, flash, redirect, url_for
 from manager.bill.validate import Validate as V
@@ -22,6 +22,7 @@ class BackEndBill():
     def order_medical(self,current_customer):
         cart_name = current_customer.username
         cart = session[cart_name]
+        check = ''
         if not cart:
             flash('cart is empty')
             return 'cart is empty', 404
@@ -29,7 +30,9 @@ class BackEndBill():
             new_bill = self.create_bill(current_customer.id)
             for i,j in cart.items():
                 medical_id, count = i, j['count']
-                self.add_on_bill_detail(new_bill['id'],medical_id,int(count))
+                check = self.add_on_bill_detail(new_bill['id'],medical_id,int(count))
+                if check == ('none', 404):
+                    self.delete_one_in_cart(current_customer, medical_id)
             session[cart_name] = {}
             flash('add')
             return 'add', 201
@@ -38,16 +41,18 @@ class BackEndBill():
     def add_on_bill_detail(self,bill_id,medical_id,count):
         medical = Medical.query.get(medical_id)
         bill_detail = BillDetail.query.filter_by(bill_id=bill_id,medical_id=medical_id).first()
-        if medical.count >= int(count):
-            if not bill_detail:
-                new_bill_detail = BillDetail(bill_id=bill_id, medical_id=medical_id,count=count)
-                db.session.add(new_bill_detail)
-                self.decrease_count(medical_id,count)
-                db.session.commit()
-            else:
-                self.increase_count(bill_id, medical_id, count)
-                self.decrease_count(medical_id, count)
-            return 'add', 201
+        if medical:
+            if medical.count >= int(count):
+                if not bill_detail:
+                    new_bill_detail = BillDetail(bill_id=bill_id, medical_id=medical_id,count=count)
+                    db.session.add(new_bill_detail)
+                    self.decrease_count(medical_id,count)
+                    db.session.commit()
+                else:
+                    self.increase_count(bill_id, medical_id, count)
+                    self.decrease_count(medical_id, count)
+                return 'add', 201
+            return 'none', 404
         return 'none', 404
 
     def del_medical_billdetail(self, medical_id):
@@ -78,23 +83,42 @@ class BackEndBill():
         db.session.commit()
         return 'increase'
 
-    def show_bill(self):
-        all_bill = Bill.query.all()
+    def get_pages_bill(self,page_num):
+        bill = Bill.query.order_by(Bill.id.desc()).paginate(int(page_num), 5, False)
+        return bill
+
+    def get_pages_number(self, medical_id):
+        page = self.get_pages_bill(1)
+        medical = Medical.query.filter_by(id=medical_id).first()
+        c=1
+        for i in range(1, page.pages+1):
+            page = self.get_pages_bill(i)
+            if medical in page.items:
+                c = page.page
+                return c
+        return c
+
+    def get_page_bill_customer(self, customer_id, page_num):
+        bill = Bill.query.filter_by(customer_id=customer_id).order_by(Bill.id.desc()).paginate(int(page_num), 5, False)
+        return bill
+
+    def show_bill(self, page_num):
+        all_bill = self.get_pages_bill(page_num)
         output = {}
         if all_bill:
-            for i in all_bill:
+            for i in all_bill.items:
                 item = {'id': i.id, 'customer': i.customer.username, 'status': i.status,
                         'added_on': i.added_on}
                 output[i.id] = item
             return output
         return output
 
-    def show_bill_customer(self, customer_id):
-        bill = Bill.query.filter_by(customer_id=customer_id).all()
+    def show_bill_customer(self, customer_id, page_num):
+        bill = self.get_page_bill_customer(customer_id, page_num)
         output = {}
         c = 1
         if bill:
-            for i in bill:
+            for i in bill.items:
                 item = {'id': i.id, 'customer': i.customer.username, 'status': i.status,
                         'added_on': i.added_on}
                 output[c] = item
@@ -126,11 +150,7 @@ class BackEndBill():
     def add_to_cart(self,current_customer):
         try:
             cart_name = current_customer.username
-            c = request.headers.get('Content-Type')
-            if c == 'application/json':
-                data = request.json
-            else:
-                data = request.form
+            data = check_data()
             if V.vali_add_to_cart(data) == True:
                 medical_id = str(data['medical_id'])
                 count = int(data['count'])
@@ -195,11 +215,7 @@ class BackEndBill():
     def update_cart(self, current_customer, medical_id):
         cart_name = current_customer.username
         cart = self.show_cart(current_customer)
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         count = int(data['count'])
         medical = Medical.query.filter_by(id=medical_id).first()
         if medical_id in cart.keys():
@@ -220,6 +236,7 @@ class BackEndBill():
 
 
     def delete_one_in_cart(self,current_customer,medical_id):
+
         cart_name = current_customer.username
         medical = Medical.query.filter_by(id=medical_id).first()
         cart = session[cart_name]
@@ -232,7 +249,7 @@ class BackEndBill():
                 session[cart_name] = cart
                 flash('delete')
                 return 'delete', 204
-        flash('none')
+        flash(medical_id+' none')
         return 'none', 404
 
 

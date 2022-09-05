@@ -11,7 +11,7 @@ indexs = Blueprint("indexs", __name__)
 @token_required
 def index(current_user):
     try:
-        return render_template('home.html',current_user=current_user, role_user=current_user.role.name)
+        return render_template('home.html',current_user=current_user)
     except AttributeError:
         return redirect(url_for('managers.login'))
 

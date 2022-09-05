@@ -4,8 +4,8 @@
         <form method="POST" action="">
             {{ form.hidden_tag() }}
             <fieldset class="form-group">
-                <legend class="border-bottom mb-4">My account</legend>
-                <div class="form-group">
+                <legend class="border-bottom mb-4">Check</legend>
+                <div class="form-group-tabindex" >
                     {{ form.medical_id.label(class="form-control-label") }}
                     {% if form.medical_id.errors %}
                         {{ form.medical_id(class="form-control form-control-lg is-invalid") }}

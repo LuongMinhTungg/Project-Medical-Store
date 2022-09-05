@@ -1,6 +1,6 @@
 import datetime
 from manager.config import app
-from manager.extension import db
+from manager.extension import db, check_data
 from manager.model.model import Customer
 from flask import Flask, jsonify, request, Response, make_response, render_template, session, Blueprint, flash, redirect, url_for
 import jwt
@@ -10,11 +10,7 @@ from manager.customer.validate import Validate as V
 V=V()
 class BackEndCustomer:
     def login_customer(self):
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         username = data['username']
         password = data['password']
         if V.vali_login_customer(data):
@@ -33,11 +29,7 @@ class BackEndCustomer:
         return V.vali_login_customer(data)
 
     def register_customer(self):
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         if V.vali_register_customer(data) == True:
             password = data['password']
             hashed_pw = generate_password_hash(password, method='sha256')
@@ -58,11 +50,7 @@ class BackEndCustomer:
         return V.vali_register_customer(data)
 
     def change_password(self):
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         username = data['username']
         user = Customer.query.filter_by(username=username).first()
         data = request.form
@@ -83,11 +71,7 @@ class BackEndCustomer:
 
     def reset_password_customer(self, username):
         customer = Customer.query.filter_by(username=username).first()
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         if customer:
             if check_password_hash(customer.password,data['old_password']):
                 if check_password_hash(customer.password, data['new_password']):
@@ -107,11 +91,7 @@ class BackEndCustomer:
 
     def update_customer_account(self, username):
         customer = Customer.query.filter_by(username=username).first()
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         if customer:
             customer.name = data['name']
             customer.phone = data['phone']

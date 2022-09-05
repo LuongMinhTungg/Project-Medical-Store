@@ -23,13 +23,13 @@ def register_customer():
 def change_password():
     return MC.change_password()
 
-@customers.route('/customer/reset-password/<username>', methods=['POST','GET'])
+@customers.route('/customer/reset-password', methods=['POST','GET'])
 @token_customer_required
-def reset_password_customer(current_customer,username):
-    return MC.reset_password(current_customer, username)
+def reset_password_customer(current_customer):
+    return MC.reset_password(current_customer, current_customer.username)
 
-@customers.route('/customer/customer-account/<username>', methods=['POST','GET'])
+@customers.route('/customer/customer-account', methods=['POST','GET'])
 @token_customer_required
-def customer_account(current_customer,username):
-    return MC.get_customer(current_customer, username)
+def customer_account(current_customer):
+    return MC.get_customer(current_customer, current_customer.username)
 

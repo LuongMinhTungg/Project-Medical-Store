@@ -1,6 +1,6 @@
 import datetime
 from manager.config import app
-from manager.extension import db
+from manager.extension import db, check_data
 from manager.model.model import ManagerUser, Role
 from flask import Flask, jsonify, request, Response, make_response, render_template, session, Blueprint, flash, redirect, url_for
 import jwt
@@ -8,13 +8,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from manager.manager_user.validate import Validate as V
 
 V=V()
+
 class BackEndManagerUser:
     def login(self):
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         if V.vali_login(data) == True:
             username = data['username']
             password = data['password']
@@ -29,15 +26,11 @@ class BackEndManagerUser:
                     app.config['SECRET_KEY'])
                 return token
             flash('wrong password')
-            return 'wrong password', 404
+            return 'wrong password', 403
         return V.vali_login(data), 404
 
     def register(self):
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         if V.vali_register_user(data) == True:
             role = Role.query.filter_by(name=data['role']).first()
             if not role:
@@ -46,6 +39,7 @@ class BackEndManagerUser:
             cf_pw = data['confirm_password']
             username = data['username']
             user = ManagerUser.query.filter_by(username=username).first()
+            '''select top * from ManagerUser where username=username'''
             if not user:
                 if check_password_hash(hashed_pw,cf_pw):
                     new_user = ManagerUser(name=data['name'], username=data['username'],
@@ -55,7 +49,7 @@ class BackEndManagerUser:
                     db.session.commit()
                     flash('add')
                     return 'add', 201
-                return 'wrong cf_pw', 404
+                return 'wrong cf_pw', 403
             flash('username is existed')
             return 'username existed', 409
         flash(V.vali_register_user(data))
@@ -63,11 +57,7 @@ class BackEndManagerUser:
 
     def reset_password(self,username):
         user = ManagerUser.query.filter_by(username=username).first()
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         if V.vali_reset_password_user(data) == True:
             if user:
                 if check_password_hash(user.password,data['old_password']):
@@ -80,19 +70,15 @@ class BackEndManagerUser:
                         db.session.commit()
                         flash('success')
                         return 'reset', 202
-                    return 'wrong cf_pw', 404
+                    return 'wrong cf_pw', 403
                 flash('wrong password')
-                return 'wrong password', 404
+                return 'wrong password', 403
             flash('user not existed')
             return 'user not existed', 404
         return V.vali_reset_password_user(data)
 
     def change_password(self):
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         username = data['username']
         user = ManagerUser.query.filter_by(username=username).first()
         data = request.form
@@ -108,9 +94,9 @@ class BackEndManagerUser:
                         db.session.commit()
                         flash('success')
                         return 'reset', 202
-                    return 'wrong cf_pw', 404
+                    return 'wrong cf_pw', 403
                 flash('wrong password')
-                return 'wrong password', 404
+                return 'wrong password', 403
             flash('user not existed')
             return 'user not existed', 404
         return V.vali_change_password_user(data)
@@ -118,10 +104,10 @@ class BackEndManagerUser:
 
     def get_user(self,current_user, username):
         user = ManagerUser.query.filter_by(username=username).first()
-        if current_user.role.name == 'manager' and username.role.name == 'admin':
-            return 'not role', 404
+        if current_user.role.name == 'manager' and user.role.name == 'admin':
+            return 'not role', 410
         elif current_user.role.name == 'staff' and user.role.name in ['admin', 'manager']:
-            return 'not role', 404
+            return 'not role', 410
         else:
             if user:
                 item = {'name':user.name,'username':user.username,'role':user.role.name,'phone':user.phone,'join_date':user.join_date}
@@ -129,15 +115,68 @@ class BackEndManagerUser:
             return user
 
     def get_all_user(self):
-        user = ManagerUser.query.all()
+        user = self.get_pages(1)
+        all = {}
+        for i in range(1,user.pages+1):
+            output = []
+            user = self.get_pages(i)
+            for j in user.items:
+                item = {'name': j.name, 'username': j.username, 'role': j.role.name, 'phone': j.phone,
+                        'join_date': j.join_date}
+                output.append(item)
+            all[i] = output
+        return all
+
+    def get_user_by_page(self, page_num):
+        user = self.get_pages(page_num)
         output = {}
         if user:
-            for i in user:
+            for i in user.items:
                 item = {'name': i.name, 'username': i.username, 'role': i.role.name, 'phone': i.phone,
                         'join_date': i.join_date}
                 output[i.id] = item
             return output
         return output
+
+    def get_pages(self, page_num):
+        user = ManagerUser.query.paginate(int(page_num), 5, False)
+        return user
+
+    def get_page_user(self, username):
+        page = self.get_pages(1)
+        medical = ManagerUser.query.filter_by(username=username).first()
+        c=1
+        for i in range(1, page.pages+1):
+            page = self.get_pages(i)
+            if medical in page.items:
+                c = page.page
+                return c
+        return c
+
+
+    def search_user_by_username(self):
+        user = self.get_pages_search(1)
+        all = {}
+        if user.items:
+            for i in range(1,user.pages+1):
+                output = []
+                user = self.get_pages_search(i)
+                for j in user.items:
+                    item = {'name': j.name, 'username': j.username, 'role': j.role.name, 'phone': j.phone,
+                            'join_date': j.join_date}
+                    output.append(item)
+                all[i] = output
+            return all
+        return 'none', 404
+
+    def get_pages_search(self, page_num):
+        data = check_data()
+        search_data = data['search']
+        user = ManagerUser.query.filter(ManagerUser.username.contains(search_data)).paginate(int(page_num), per_page=5, error_out=False)
+        if search_data == '':
+            return self.get_pages(page_num)
+        return user
+
 
     def del_user(self,current_user, username):
         user = ManagerUser.query.filter_by(username=username).first()
@@ -145,6 +184,12 @@ class BackEndManagerUser:
             try:
                 if current_user.role.name == 'manager' and user.role.name == 'admin':
                     return 'not role', 404
+                elif user.role.name == 'admin':
+                    flash('cant delete admin')
+                    return 'cant delete', 404
+                elif current_user.username == user.username:
+                    flash('account is used')
+                    return 'cant delete', 404
                 else:
                     db.session.delete(user)
                     db.session.commit()
@@ -159,11 +204,7 @@ class BackEndManagerUser:
 
     def update_user_admin(self,username):
         user = ManagerUser.query.filter_by(username=username).first()
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         role = Role.query.filter_by(name=data['role']).first()
         if not role:
             return 'none role', 410
@@ -181,14 +222,11 @@ class BackEndManagerUser:
 
     def update_user(self,current_user,username):
         user = ManagerUser.query.filter_by(username=username).first()
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         role = Role.query.filter_by(name=data['role']).first()
         if not role:
-            return 'none role', 404
+            flash('none role')
+            return 'none role', 410
         if user:
             if current_user.role.name == 'manager' and user.role.name != 'admin':
                 if role.name == 'admin':
@@ -198,19 +236,18 @@ class BackEndManagerUser:
                     user.role_id = role.id
                     user.phone = data['phone']
                     db.session.commit()
+                    flash('update')
                     return 'update', 202
+                flash(V.vali_update_user(data))
                 return V.vali_update_user(data)
             if current_user.role.name == 'admin':
                 return self.update_user_admin(username)
+            flash('not role')
             return 'not role', 404
         return 'not found', 404
 
     def insert_user(self,current_user):
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         if current_user.role.name == 'admin':
             return self.register()
         else:
@@ -220,7 +257,7 @@ class BackEndManagerUser:
                 role = Role.query.filter_by(name=data['role']).first()
                 if not role:
                     flash('none role')
-                    return 'none role', 404
+                    return 'none role', 410
                 hashed_pw = generate_password_hash(data['password'], method='sha256')
                 cf_pw = data['confirm_password']
                 username = data['username']
@@ -234,32 +271,11 @@ class BackEndManagerUser:
                         db.session.commit()
                         flash('add')
                         return 'add', 201
-                    return 'wrong cf_pw', 404
+                    return 'wrong cf_pw', 403
                 flash('username is existed')
                 return 'username is existed', 409
             flash(V.vali_register_user(data))
             return V.vali_register_user(data)
-
-
-    def search_user_by_username(self):
-        user = self.get_all_user()
-        output = {}
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
-        search_data = data['search']
-        c=1
-        if user:
-            for i in user.values():
-                if search_data in i['name']:
-                    item = {'name': i['name'], 'username': i['username'], 'role': i['role'], 'phone': i['phone'],
-                            'join_date': i['join_date']}
-                    output[c] = item
-                    c = c+1
-            return output
-        return output
 
     def get_all_role(self):
         role = Role.query.all()
@@ -272,11 +288,7 @@ class BackEndManagerUser:
         return output
 
     def insert_role(self):
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         if V.vali_insert_role(data) == True:
             name = data['name']
             role = Role.query.filter_by(name=name).first()
@@ -291,11 +303,7 @@ class BackEndManagerUser:
         return V.vali_insert_role(data)
 
     def update_role(self,role_id):
-        c = request.headers.get('Content-Type')
-        if c == 'application/json':
-            data = request.json
-        else:
-            data = request.form
+        data = check_data()
         role = Role.query.filter_by(id=role_id).first()
         if role:
             if role_id == '1':

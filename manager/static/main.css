@@ -266,3 +266,7 @@ display:none
   margin: 4px 2px;
   cursor: pointer;
 }
+
+.form-group-tabindex{
+  pointer-events:none
+}

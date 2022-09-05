@@ -5,15 +5,25 @@ MM = MM()
 
 medicals = Blueprint("medicals", __name__)
 
-@medicals.route('/medical/show-all',methods=['GET','POST'])
+@medicals.route('/medical/show-all/<page_num>',methods=['GET','POST'])
 @token_required
-def show_all_medical(current_user):
-    return MM.show_all_medical(current_user)
+def show_all_medical(current_user, page_num):
+    return MM.show_all_medical(current_user, page_num)
 
-@medicals.route('/customer/medical/show-all',methods=['GET','POST'])
+@medicals.route('/medical/search/<page_num>',methods=['GET','POST'])
+@token_required
+def search_medical(current_user, page_num):
+    return MM.search_medical(current_user, page_num)
+
+@medicals.route('/customer/medical/show-all/<page_num>',methods=['GET','POST'])
 @token_customer_required
-def show_all_medical_customer(current_customer):
-    return MM.show_all_medical_customer(current_customer)
+def show_all_medical_customer(current_customer, page_num):
+    return MM.show_all_medical_customer(current_customer, page_num)
+
+@medicals.route('/customer/medical/search/<page_num>', methods=['POST','GET'])
+@token_customer_required
+def search_medical_customer(current_customer, page_num):
+    return MM.search_medical_customer(current_customer, page_num)
 
 @medicals.route('/medical/show/<medical_id>',methods=['POST','GET'])
 @token_required
@@ -40,10 +50,15 @@ def update_medical(current_user,medical_id):
 def insert_medical_type(current_user):
     return MM.insert_medical_type(current_user)
 
-@medicals.route('/medical-type/show-all', methods=['GET'])
+@medicals.route('/medical-type/show-all/<page_num>', methods=['GET', 'POST'])
 @token_required
-def show_all_medical_type(current_user):
-    return MM.show_all_medical_type(current_user)
+def show_all_medical_type(current_user, page_num):
+    return MM.show_all_medical_type(current_user, page_num)
+
+@medicals.route('/medical-type/search/<page_num>', methods=['GET','POST'])
+@token_required
+def search_medical_type(current_user, page_num):
+    return MM.search_medical_type(current_user, page_num)
 
 @medicals.route('/medical-type/show/<medical_type_id>', methods=['GET','POST'])
 @token_required

@@ -97,6 +97,8 @@ class ManagementCustomer:
             return render_template('error_not_found_customer.html', current_customer=current_customer)
         except AttributeError:
             return redirect(url_for('customers.login_customer'))
+        except:
+            return render_template('error_not_found_customer.html', current_customer=current_customer)
 
 
 class RegistrationForm(FlaskForm):

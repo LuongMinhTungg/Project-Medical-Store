@@ -26,7 +26,7 @@ def token_required(func):
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
             current_user = ManagerUser.query.filter_by(username=data['username']).first()
         except Exception:
-            if request.headers.get('User-Agent')=='PostmanRuntime/7.29.0':
+            if request.headers.get('User-Agent') == 'PostmanRuntime/7.29.0':
                 return 'wrong token', 404
             else:
                 resp = redirect(url_for('indexs.index'))
@@ -43,7 +43,7 @@ def check_permiss(role):
                 if current_user.role.name in role:
                     return func(current_user, *args, **kwargs)
                 if request.headers.get('User-Agent')=='PostmanRuntime/7.29.0':
-                    return 'not role', 404
+                    return 'not role', 410
                 return render_template('error_not_role.html', current_user=current_user)
             except AttributeError:
                 if request.headers.get('User-Agent')=='PostmanRuntime/7.29.0':

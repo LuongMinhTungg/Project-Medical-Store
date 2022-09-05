@@ -28,22 +28,22 @@
             <div class="navbar-nav mr-auto">
             <ul>
               <a class="nav-item nav-link" href="/">Home</a>
-              <li><a class="nav-item nav-link" href="/get-all-user">User</a>
+              <li><a class="nav-item nav-link" href="{{ url_for('managers.get_all_user', page_num = 1) }}">User</a>
                   <div class="user-sup-menu">
                         <ul>
-                            <li><a style="color: #cbd5db" href="{{ url_for('managers.get_all_role') }}">Role</a></li>
+                            <li><a style="color: #cbd5db" href="{{ url_for('managers.get_all_role', page_num = 1) }}">Role</a></li>
                         </ul>
                     </div>
               </li>
               <li><a class="nav-item nav-link" href="#">Product</a>
                   <div class="product-sup-menu">
                         <ul>
-                            <li><a style="color: #cbd5db" href="{{ url_for('medicals.show_all_medical_type') }}">Medical Category</a></li>
-                            <li><a style="color: #cbd5db" href="{{ url_for('medicals.show_all_medical') }}">Medical</a></li>
+                            <li><a style="color: #cbd5db" href="{{ url_for('medicals.show_all_medical_type', page_num = 1) }}">Medical Category</a></li>
+                            <li><a style="color: #cbd5db" href="{{ url_for('medicals.show_all_medical', page_num = 1) }}">Medical</a></li>
                         </ul>
                     </div>
               </li>
-              <a class="nav-item nav-link" href="/bill/show-all">Bill</a>
+              <a class="nav-item nav-link" href="{{ url_for('bills.show_all_bill', page_num = 1) }}">Bill</a>
                 <a class="nav-item nav-link" href="/about">About</a>
             </ul>
             </div>
@@ -51,10 +51,10 @@
             <div class="navbar-nav">
                 <ul>
               {% if current_user %}
-                <li><a class="nav-item nav-link" href="{{ url_for('managers.get_user',username = current_user.username) }}">Account</a>
+                <li><a class="nav-item nav-link" href="{{ url_for('managers.get_account') }}">Account</a>
                     <div class="account-sup-menu">
                         <ul>
-                            <li><a style="color: #cbd5db" href="{{ url_for('managers.reset_password', username = current_user.username) }}">Reset Password</a></li>
+                            <li><a style="color: #cbd5db" href="{{ url_for('managers.reset_password') }}">Reset Password</a></li>
                             <li><a style="color: #cbd5db" href="{{ url_for('managers.logout') }}">Logout</a></li>
                         </ul>
                     </div>

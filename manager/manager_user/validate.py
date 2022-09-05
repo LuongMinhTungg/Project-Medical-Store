@@ -41,7 +41,8 @@ class Validate:
     def vali_reset_password_user(self,data):
         schema = {'old_password':{'type': 'string', 'empty': False, 'nullable': False, 'required': True},
                   'new_password':{'type': 'string', 'empty': False, 'nullable': False, 'required': True},
-                  'confirm_password':{'type': 'string', 'empty': False, 'nullable': False, 'required': True},'submit': {'type': 'string'},
+                  'confirm_password':{'type': 'string', 'empty': False, 'nullable': False, 'required': True},
+                  'submit': {'type': 'string'},
                   'csrf_token': {'type': 'string'}}
         v = Validator(schema)
         if v.validate(data, schema):
@@ -64,7 +65,8 @@ class Validate:
                   'username': {'type': 'string', 'empty': False, 'nullable': False, 'required': True,'minlength': 1, 'maxlength': 45},
                   'password': {'type': 'string', 'empty': False, 'nullable': False, 'required': True},
                   'confirm_password':{'type': 'string', 'empty': False, 'nullable': False, 'required': True},
-                  'role': {'type': 'string', 'empty': False, 'nullable': False, 'required': True, 'allowed': ['admin', 'manager', 'staff']},
+                  'role': {'type': 'string', 'empty': False, 'nullable': False, 'required': True,
+                           'allowed': ['admin', 'manager', 'staff']},
                   'phone': {'type': 'string', 'empty': False, 'nullable': False, 'required': True, 'regex': r'[0-9]{11}'},
                   'submit':{'type':'string'},
                   'csrf_token':{'type':'string'}}
